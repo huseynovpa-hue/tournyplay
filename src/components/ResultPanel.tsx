@@ -282,7 +282,7 @@ export function ResultPanel({
         </div>
 
         
-          href={result.screenshot_url}
+          <a href={result.screenshot_url}
           target="_blank"
           rel="noreferrer"
           className="mt-4 block overflow-hidden rounded-lg border border-base-border"
