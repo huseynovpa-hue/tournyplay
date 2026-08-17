@@ -87,10 +87,10 @@ export default function CreateRoomPage() {
                 setStake(amount);
                 setCustomStake("");
               }}
-              className={`rounded-lg border px-3 py-2.5 text-center font-display font-bold ${
+              className={`btn-3d rounded-lg px-3 py-2.5 text-center font-display font-bold ${
                 !customStake && stake === amount
-                  ? "border-pitch bg-pitch/15 text-pitch"
-                  : "border-base-border text-ink-dim hover:border-ink-faint"
+                  ? "btn-3d-pitch"
+                  : "btn-3d-outline"
               }`}
             >
               {amount}
@@ -152,7 +152,7 @@ export default function CreateRoomPage() {
       <button
         onClick={handleCreate}
         disabled={loading}
-        className="mt-6 w-full rounded-lg bg-pitch py-3 font-display text-base font-bold text-base disabled:opacity-60"
+        className="btn-3d btn-3d-pitch mt-6 w-full rounded-lg py-3 font-display text-base font-bold disabled:opacity-60"
       >
         {loading ? "Creating room..." : `Create room · ${finalStake || 0} tokens`}
       </button>
