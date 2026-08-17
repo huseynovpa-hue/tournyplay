@@ -44,8 +44,8 @@ export function ResultPanel({
     }
     const sw = Number(scoreWinner);
     const sl = Number(scoreLoser);
-    if (Number.isNaN(sw) || Number.isNaN(sl) || sw < sl) {
-      setError("Enter a valid score — the winner's score can't be lower.");
+    if (Number.isNaN(sw) || Number.isNaN(sl) || sw <= sl) {
+      setError("Enter a valid score — the winner's score must be higher.");
       return;
     }
 
@@ -97,13 +97,45 @@ export function ResultPanel({
     onChanged();
   }
 
+  async function handleReject() {
+    const confirmed = window.confirm(
+      "Reject this result? The match will be marked as disputed and reviewed manually. Neither player will receive tokens until it's resolved."
+    );
+    if (!confirmed) return;
+
+    setBusy(true);
+    setError(null);
+    const { error: rpcError } = await supabase.rpc("reject_result", {
+      p_room_id: room.id,
+    });
+    setBusy(false);
+    if (rpcError) {
+      setError(rpcError.message);
+      return;
+    }
+    onChanged();
+  }
+
   if (room.status === "full") {
+    if (!room.finished_at) {
+      return (
+        <div className="rounded-xl border border-base-border bg-base-surface p-5">
+          <h3 className="font-display text-lg font-bold">Report the result</h3>
+          <p className="mt-2 text-sm text-ink-dim">
+            Set the match room ID, start the match, and click{" "}
+            <span className="font-semibold text-ink">Finish match</span>{" "}
+            above once you&apos;re done playing — the result form will
+            appear here.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="rounded-xl border border-base-border bg-base-surface p-5">
         <h3 className="font-display text-lg font-bold">Report the result</h3>
         <p className="mt-1 text-sm text-ink-dim">
-          Once the match has been played, the winner reports the score with a
-          screenshot from Match History.
+          The winner reports the score with a screenshot from Match History.
         </p>
 
         {!showForm ? (
@@ -215,8 +247,13 @@ export function ResultPanel({
     );
   }
 
-  if ((room.status === "reported" || room.status === "completed") && result) {
-    const canApprove =
+  if (
+    (room.status === "reported" ||
+      room.status === "completed" ||
+      room.status === "disputed") &&
+    result
+  ) {
+    const canRespond =
       room.status === "reported" && result.reporter_id !== currentUserId;
 
     return (
@@ -244,7 +281,7 @@ export function ResultPanel({
           </div>
         </div>
 
-        <a
+        
           href={result.screenshot_url}
           target="_blank"
           rel="noreferrer"
@@ -271,17 +308,32 @@ export function ResultPanel({
             ✓ Approved — {room.stake * 2} tokens credited to{" "}
             {nameFor(result.winner_id)}.
           </p>
-        ) : canApprove ? (
-          <button
-            onClick={handleApprove}
-            disabled={busy}
-            className="mt-4 w-full rounded-lg bg-pitch py-2.5 font-semibold text-base disabled:opacity-60"
-          >
-            {busy ? "Approving..." : "Approve result"}
-          </button>
+        ) : room.status === "disputed" ? (
+          <p className="mt-4 rounded-lg bg-danger/10 px-3.5 py-2.5 text-sm font-semibold text-danger">
+            This result was rejected and is pending manual review. Our team
+            will check it and decide the outcome — tokens stay held until
+            then.
+          </p>
+        ) : canRespond ? (
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={handleApprove}
+              disabled={busy}
+              className="flex-1 rounded-lg bg-pitch py-2.5 font-semibold text-base disabled:opacity-60"
+            >
+              {busy ? "Working..." : "Approve result"}
+            </button>
+            <button
+              onClick={handleReject}
+              disabled={busy}
+              className="flex-1 rounded-lg border border-danger/50 py-2.5 font-semibold text-danger disabled:opacity-60"
+            >
+              Reject result
+            </button>
+          </div>
         ) : (
           <p className="mt-4 text-sm text-ink-faint">
-            Waiting for the other player to approve this result.
+            Waiting for the other player to approve or reject this result.
           </p>
         )}
       </div>
