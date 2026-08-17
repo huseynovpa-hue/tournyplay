@@ -7,12 +7,10 @@ import type { RoomMessage } from "@/types/database";
 export function RoomChat({
   roomId,
   currentUserId,
-  isCreator,
   senderNames,
 }: {
   roomId: string;
   currentUserId: string;
-  isCreator: boolean;
   senderNames: Record<string, string>;
 }) {
   const supabase = createClient();
@@ -20,6 +18,13 @@ export function RoomChat({
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const seenIds = useRef<Set<string>>(new Set());
+
+  function addMessage(m: RoomMessage) {
+    if (seenIds.current.has(m.id)) return;
+    seenIds.current.add(m.id);
+    setMessages((prev) => [...prev, m]);
+  }
 
   useEffect(() => {
     let active = true;
@@ -30,7 +35,10 @@ export function RoomChat({
         .select("*")
         .eq("room_id", roomId)
         .order("created_at", { ascending: true });
-      if (active && data) setMessages(data);
+      if (active && data) {
+        data.forEach((m) => seenIds.current.add(m.id));
+        setMessages(data);
+      }
     }
     loadMessages();
 
@@ -45,7 +53,7 @@ export function RoomChat({
           filter: `room_id=eq.${roomId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as RoomMessage]);
+          addMessage(payload.new as RoomMessage);
         }
       )
       .subscribe();
@@ -62,30 +70,31 @@ export function RoomChat({
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!text.trim()) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
     setSending(true);
-    const { error } = await supabase.from("room_messages").insert({
-      room_id: roomId,
-      sender_id: currentUserId,
-      message: text.trim(),
-    });
+    const { data, error } = await supabase
+      .from("room_messages")
+      .insert({
+        room_id: roomId,
+        sender_id: currentUserId,
+        message: trimmed,
+      })
+      .select()
+      .single();
     setSending(false);
-    if (!error) setText("");
+    if (!error) {
+      setText("");
+      if (data) addMessage(data as RoomMessage);
+    }
   }
 
   return (
     <div className="flex h-[420px] flex-col rounded-xl border border-base-border bg-base-surface">
-      {isCreator && (
-        <div className="border-b border-base-border bg-warn/10 px-4 py-2.5 text-xs text-warn">
-          You&apos;re the host: open eFootball Mobile, start a Friendly
-          Match, and type the Room ID it gives you into this chat.
-        </div>
-      )}
-
       <div className="scrollbar-thin flex-1 space-y-3 overflow-y-auto px-4 py-3">
         {messages.length === 0 ? (
           <p className="mt-10 text-center text-sm text-ink-faint">
-            No messages yet. Say hello and share the room ID here.
+            No messages yet. Say hello to your opponent.
           </p>
         ) : (
           messages.map((m) => {
@@ -121,9 +130,7 @@ export function RoomChat({
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={
-            isCreator ? "Type the Room ID from eFootball here…" : "Message…"
-          }
+          placeholder="Message…"
           className="flex-1 rounded-lg border border-base-border bg-base-raised px-3.5 py-2 text-sm text-ink outline-none focus:border-pitch"
         />
         <button
