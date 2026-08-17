@@ -27,6 +27,8 @@ export type Room = {
   room_code: string | null;
   started_at: string | null;
   finished_at: string | null;
+  creator_ready_at: string | null;
+  opponent_ready_at: string | null;
   creator?: Profile;
   opponent?: Profile | null;
   result?: RoomResult | null;
