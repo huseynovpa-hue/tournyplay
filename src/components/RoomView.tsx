@@ -7,6 +7,7 @@ import type { Room, RoomResult } from "@/types/database";
 import { StatusBadge } from "./StatusBadge";
 import { CountdownTimer } from "./CountdownTimer";
 import { RoomChat } from "./RoomChat";
+import { MatchFlow } from "./MatchFlow";
 import { ResultPanel } from "./ResultPanel";
 import { RulesContent } from "./RulesContent";
 
@@ -188,27 +189,36 @@ export function RoomView({
         </div>
       )}
 
+      {isParticipant && room.status === "full" && (
+        <div className="mt-6">
+          <MatchFlow room={room} currentUserId={currentUserId} onChanged={refresh} />
+        </div>
+      )}
+
       {isParticipant && room.status !== "open" && (
         <div className="mt-6">
           <RoomChat
             roomId={room.id}
             currentUserId={currentUserId}
-            isCreator={isCreator}
             senderNames={senderNames}
           />
         </div>
       )}
 
-      {isParticipant && (room.status === "full" || room.status === "reported" || room.status === "completed") && (
-        <div className="mt-6">
-          <ResultPanel
-            room={room}
-            result={result}
-            currentUserId={currentUserId}
-            onChanged={refresh}
-          />
-        </div>
-      )}
+      {isParticipant &&
+        (room.status === "full" ||
+          room.status === "reported" ||
+          room.status === "completed" ||
+          room.status === "disputed") && (
+          <div className="mt-6">
+            <ResultPanel
+              room={room}
+              result={result}
+              currentUserId={currentUserId}
+              onChanged={refresh}
+            />
+          </div>
+        )}
 
       {room.status === "expired" && (
         <div className="mt-6 rounded-xl border border-ink-faint/30 bg-base-surface p-5 text-sm text-ink-dim">
