@@ -21,7 +21,7 @@ export default async function MyRoomsPage() {
   const { data: rooms } = await supabase
     .from("rooms")
     .select(
-      "*, creator:profiles!rooms_creator_id_fkey(*), opponent:profiles!rooms_opponent_id_fkey(*)"
+      "*, creator:profiles!rooms_creator_id_fkey(*), opponent:profiles!rooms_opponent_id_fkey(*), result:room_results(*)"
     )
     .or(`creator_id.eq.${user.id},opponent_id.eq.${user.id}`)
     .order("created_at", { ascending: false })
