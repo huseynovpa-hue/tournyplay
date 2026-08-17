@@ -76,7 +76,20 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return <p className="mt-10 text-center text-ink-dim">Loading…</p>;
+    return (
+      <div className="mx-auto max-w-lg">
+        <div className="skeleton h-8 w-32 rounded-lg" />
+        <div className="skeleton mt-2 h-4 w-64 rounded-lg" />
+        <div className="mt-6 rounded-2xl border border-base-border bg-base-surface p-6">
+          <div className="skeleton h-16 w-full rounded-xl" />
+          <div className="mt-6 space-y-5">
+            <div className="skeleton h-10 w-full rounded-lg" />
+            <div className="skeleton h-10 w-full rounded-lg" />
+            <div className="skeleton h-10 w-full rounded-lg" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -98,7 +111,7 @@ export default function ProfilePage() {
           </div>
           <a
             href="#buy-tokens"
-            className="rounded-lg bg-pitch px-4 py-2 font-semibold text-base"
+            className="btn-3d btn-3d-pitch rounded-lg px-4 py-2 font-semibold"
           >
             Buy tokens
           </a>
@@ -158,7 +171,7 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-lg bg-pitch py-2.5 font-display font-bold text-base disabled:opacity-60"
+            className="btn-3d btn-3d-pitch w-full rounded-lg py-2.5 font-display font-bold disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save changes"}
           </button>
