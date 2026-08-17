@@ -14,6 +14,10 @@ html {
 body {
   background-color: #0a0e13;
   color: #eaf0f6;
+  background-image:
+    radial-gradient(700px circle at 15% -10%, rgba(57, 217, 124, 0.10), transparent 60%),
+    radial-gradient(600px circle at 100% 0%, rgba(76, 141, 255, 0.08), transparent 55%);
+  background-attachment: fixed;
 }
 
 ::selection {
@@ -39,4 +43,123 @@ body {
 }
 .live-dot {
   animation: pulse-ring 1.8s ease-out infinite;
+}
+
+/* =====================================================================
+   3D "pushable" buttons
+   A colored bottom "shelf" (box-shadow) gives depth; on press the
+   button translates down and the shelf shrinks, like a physical key.
+   ===================================================================== */
+.btn-3d {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  transform: translateY(0);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s ease;
+  will-change: transform;
+  user-select: none;
+}
+.btn-3d:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.btn-3d:active:not(:disabled) {
+  transform: translateY(4px);
+}
+.btn-3d:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.15);
+  transform: none !important;
+}
+
+.btn-3d-pitch {
+  background-color: #39d97c;
+  color: #0a0e13;
+  box-shadow: 0 5px 0 0 #1f8a50, 0 10px 18px -6px rgba(57, 217, 124, 0.45);
+}
+.btn-3d-pitch:active:not(:disabled) {
+  box-shadow: 0 1px 0 0 #1f8a50, 0 4px 10px -4px rgba(57, 217, 124, 0.4);
+}
+.btn-3d-pitch:disabled {
+  box-shadow: 0 5px 0 0 #1f8a50;
+}
+
+.btn-3d-volt {
+  background-color: #4c8dff;
+  color: #0a0e13;
+  box-shadow: 0 5px 0 0 #2e5fc7, 0 10px 18px -6px rgba(76, 141, 255, 0.4);
+}
+.btn-3d-volt:active:not(:disabled) {
+  box-shadow: 0 1px 0 0 #2e5fc7, 0 4px 10px -4px rgba(76, 141, 255, 0.35);
+}
+.btn-3d-volt:disabled {
+  box-shadow: 0 5px 0 0 #2e5fc7;
+}
+
+.btn-3d-outline {
+  background-color: #1b2330;
+  color: #eaf0f6;
+  border-color: #26303f;
+  box-shadow: 0 5px 0 0 #0a0e13, 0 8px 16px -8px rgba(0, 0, 0, 0.6);
+}
+.btn-3d-outline:active:not(:disabled) {
+  box-shadow: 0 1px 0 0 #0a0e13, 0 3px 8px -4px rgba(0, 0, 0, 0.5);
+}
+.btn-3d-outline:disabled {
+  box-shadow: 0 5px 0 0 #0a0e13;
+}
+
+.btn-3d-danger {
+  background-color: rgba(245, 80, 74, 0.12);
+  color: #f5504a;
+  border-color: rgba(245, 80, 74, 0.4);
+  box-shadow: 0 5px 0 0 rgba(245, 80, 74, 0.28), 0 8px 16px -8px rgba(245, 80, 74, 0.3);
+}
+.btn-3d-danger:active:not(:disabled) {
+  box-shadow: 0 1px 0 0 rgba(245, 80, 74, 0.28), 0 3px 8px -4px rgba(245, 80, 74, 0.25);
+}
+.btn-3d-danger:disabled {
+  box-shadow: 0 5px 0 0 rgba(245, 80, 74, 0.28);
+}
+
+/* Card hover-lift, used for room cards in browse/history lists */
+.card-3d {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.2);
+}
+.card-3d:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px -12px rgba(0, 0, 0, 0.55);
+}
+.card-3d:active {
+  transform: translateY(-1px);
+}
+
+/* Skeleton loaders shown instantly via loading.tsx while a page fetches */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: #1b2330;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.06) 20%,
+    rgba(255, 255, 255, 0.12) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  animation: skeleton-shimmer 1.6s infinite;
+}
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
