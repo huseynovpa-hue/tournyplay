@@ -12,6 +12,7 @@ export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<{
     profile_name: string;
     token_balance: number;
@@ -27,6 +28,7 @@ export function Navbar() {
       if (!user) {
         if (active) {
           setProfile(null);
+          setUserId(null);
           setLoading(false);
         }
         return;
@@ -38,6 +40,7 @@ export function Navbar() {
         .single();
       if (active) {
         setProfile(data);
+        setUserId(user.id);
         setLoading(false);
       }
     }
@@ -85,9 +88,9 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {loading ? null : profile ? (
+          {loading ? null : profile && userId ? (
             <>
-              <NotificationBell />
+              <NotificationBell userId={userId} />
               <Link
                 href="/profile"
                 className="hidden items-center gap-1.5 rounded-full border border-base-border bg-base-surface px-3 py-1.5 text-sm font-semibold text-pitch sm:flex"
