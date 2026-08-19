@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Room, RoomResult } from "@/types/database";
@@ -83,6 +84,15 @@ export function RoomView({
       setError(rpcError.message);
       return;
     }
+
+    // Best-effort: let the host know someone joined. Not awaited-critical —
+    // if this fails, the room still joined fine, so we swallow errors.
+    fetch("/api/notify/room-joined", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId: room.id }),
+    }).catch(() => {});
+
     refresh();
   }
 
@@ -128,9 +138,16 @@ export function RoomView({
             <p className="text-xs uppercase tracking-wide text-ink-faint">
               Host
             </p>
-            <p className="mt-1 font-display text-lg font-bold text-ink">
-              {room.creator?.profile_name ?? "—"}
-            </p>
+            {room.creator ? (
+              <Link
+                href={`/players/${room.creator_id}`}
+                className="mt-1 block font-display text-lg font-bold text-ink hover:text-pitch"
+              >
+                {room.creator.profile_name}
+              </Link>
+            ) : (
+              <p className="mt-1 font-display text-lg font-bold text-ink">—</p>
+            )}
             <p className="text-xs text-ink-dim">
               eFootball: {room.creator?.efootball_username ?? "—"}
             </p>
@@ -139,9 +156,18 @@ export function RoomView({
             <p className="text-xs uppercase tracking-wide text-ink-faint">
               Opponent
             </p>
-            <p className="mt-1 font-display text-lg font-bold text-ink">
-              {room.opponent?.profile_name ?? "Waiting to join…"}
-            </p>
+            {room.opponent && room.opponent_id ? (
+              <Link
+                href={`/players/${room.opponent_id}`}
+                className="mt-1 block font-display text-lg font-bold text-ink hover:text-pitch"
+              >
+                {room.opponent.profile_name}
+              </Link>
+            ) : (
+              <p className="mt-1 font-display text-lg font-bold text-ink">
+                Waiting to join…
+              </p>
+            )}
             {room.opponent && (
               <p className="text-xs text-ink-dim">
                 eFootball: {room.opponent?.efootball_username}

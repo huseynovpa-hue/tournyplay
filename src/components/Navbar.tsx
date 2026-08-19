@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { LogoWordmark } from "./Logo";
+import { NotificationBell } from "./NotificationBell";
 
 export function Navbar() {
   const supabase = createClient();
@@ -75,6 +76,9 @@ export function Navbar() {
               My Rooms
             </Link>
           )}
+          <Link href="/leaderboard" className="hover:text-pitch">
+            Leaderboard
+          </Link>
           <Link href="/rules" className="hover:text-pitch">
             Rules
           </Link>
@@ -83,6 +87,7 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           {loading ? null : profile ? (
             <>
+              <NotificationBell />
               <Link
                 href="/profile"
                 className="hidden items-center gap-1.5 rounded-full border border-base-border bg-base-surface px-3 py-1.5 text-sm font-semibold text-pitch sm:flex"

@@ -79,6 +79,14 @@ export function ResultPanel({
       setError(rpcError.message);
       return;
     }
+
+    // Best-effort: let the other player know a result is waiting on them.
+    fetch("/api/notify/result-submitted", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId: room.id }),
+    }).catch(() => {});
+
     setShowForm(false);
     onChanged();
   }
