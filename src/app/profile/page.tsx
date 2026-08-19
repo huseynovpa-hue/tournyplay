@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 const TOKENS_PER_DOLLAR = Number(
@@ -14,6 +15,7 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [profileName, setProfileName] = useState("");
   const [efootballUsername, setEfootballUsername] = useState("");
@@ -32,6 +34,7 @@ export default function ProfilePage() {
         return;
       }
       setEmail(user.email ?? "");
+      setUserId(user.id);
 
       const { data } = await supabase
         .from("profiles")
@@ -116,6 +119,16 @@ export default function ProfilePage() {
             Buy tokens
           </a>
         </div>
+
+        {userId && (
+          <Link
+            href={`/players/${userId}`}
+            className="mt-4 flex items-center justify-between rounded-xl border border-base-border bg-base-raised px-5 py-3 text-sm font-semibold text-ink hover:border-pitch/50 hover:text-pitch"
+          >
+            View my stats & match history
+            <span aria-hidden>→</span>
+          </Link>
+        )}
 
         <form onSubmit={handleSave} className="mt-6 space-y-5">
           <div>
