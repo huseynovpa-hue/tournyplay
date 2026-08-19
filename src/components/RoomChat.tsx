@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { RoomMessage } from "@/types/database";
-import { UNREAD_REFRESH_EVENT } from "./NotificationBell";
 
 export function RoomChat({
   roomId,
@@ -64,20 +63,6 @@ export function RoomChat({
       supabase.removeChannel(channel);
     };
   }, [roomId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
-    // Mark this room as "read" for the current user whenever they're looking
-  // at it — on first load, and again each time a new message comes in
-  // while the chat is open. This is what clears the red badge on the bell.
-  useEffect(() => {
-    supabase
-      .rpc("mark_room_read", { p_room_id: roomId })
-      .then(() => {
-        window.dispatchEvent(new Event(UNREAD_REFRESH_EVENT));
-      });
-  }, [roomId, messages.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
