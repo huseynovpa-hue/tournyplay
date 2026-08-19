@@ -33,6 +33,14 @@ export default async function MyRoomsPage() {
   const active = (rooms ?? []).filter((r) => ACTIVE_STATUSES.includes(r.status));
   const history = (rooms ?? []).filter((r) => HISTORY_STATUSES.includes(r.status));
 
+  // Split "active" into rooms that still need an opponent vs rooms where
+  // someone has already joined, so a newly-joined room doesn't get lost
+  // among a pile of still-open rooms.
+  const waitingForOpponent = active.filter((r) => r.status === "open");
+  const inProgress = active.filter(
+    (r) => r.status === "full" || r.status === "reported"
+  );
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -51,17 +59,47 @@ export default async function MyRoomsPage() {
         </Link>
       </div>
 
+      {inProgress.length > 0 && (
+        <section className="mt-8">
+          <div className="flex items-center gap-2">
+            <span className="live-dot h-2 w-2 rounded-full bg-warn" />
+            <h2 className="font-display text-xl font-bold text-ink">
+              In progress & awaiting a result
+            </h2>
+            <span className="rounded-full bg-warn/15 px-2 py-0.5 text-xs font-bold text-warn">
+              {inProgress.length}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-ink-dim">
+            Someone joined these rooms — play or report the result.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {inProgress.map((room) => (
+              <RoomCard key={room.id} room={room} currentUserId={user.id} />
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="mt-8">
-        <h2 className="font-display text-xl font-bold text-ink">
-          Active & waiting for a result
-        </h2>
-        {active.length === 0 ? (
+        <div className="flex items-center gap-2">
+          <span className="live-dot h-2 w-2 rounded-full bg-volt" />
+          <h2 className="font-display text-xl font-bold text-ink">
+            Waiting for an opponent
+          </h2>
+          {waitingForOpponent.length > 0 && (
+            <span className="rounded-full bg-volt/15 px-2 py-0.5 text-xs font-bold text-volt">
+              {waitingForOpponent.length}
+            </span>
+          )}
+        </div>
+        {waitingForOpponent.length === 0 ? (
           <p className="mt-3 rounded-xl border border-dashed border-base-border p-6 text-center text-sm text-ink-dim">
-            Nothing active. Join or create a room to get started.
+            Nothing waiting. Join or create a room to get started.
           </p>
         ) : (
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {active.map((room) => (
+            {waitingForOpponent.map((room) => (
               <RoomCard key={room.id} room={room} currentUserId={user.id} />
             ))}
           </div>
