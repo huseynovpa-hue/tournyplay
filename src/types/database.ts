@@ -79,6 +79,19 @@ export type PlayerStats = {
   tokens_staked?: number;
 };
 
+export type NotificationType = "room_joined" | "new_message";
+
+export type AppNotification = {
+  id: string;
+  user_id: string;
+  room_id: string;
+  actor_id: string | null;
+  type: NotificationType;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+};
+
 export type PlayerMatchHistoryItem = {
   room_id: string;
   stake: number;
