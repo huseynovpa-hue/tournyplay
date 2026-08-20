@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getUserId } from "@/lib/get-user-id";
 import { PlayerStatsCards } from "@/components/PlayerStatsCards";
 import { MatchHistoryList } from "@/components/MatchHistoryList";
 import type { PlayerStats, PlayerMatchHistoryItem } from "@/types/database";
@@ -14,23 +15,24 @@ export default async function PlayerPage({
 }) {
   const supabase = createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) notFound();
+  // Resolved once by middleware already; no extra getUser() round trip.
+  const userId = getUserId();
+  if (!userId) notFound();
 
-  const { data: statsRows } = await supabase.rpc("get_player_stats", {
-    p_user_id: params.id,
-  });
+  // Stats and match history are independent queries — fetch them in
+  // parallel instead of waiting on stats before starting history.
+  const [{ data: statsRows }, { data: history }] = await Promise.all([
+    supabase.rpc("get_player_stats", { p_user_id: params.id }),
+    supabase.rpc("get_player_match_history", {
+      p_user_id: params.id,
+      p_limit: 50,
+    }),
+  ]);
+
   const stats = (statsRows as PlayerStats[] | null)?.[0];
   if (!stats) notFound();
 
-  const { data: history } = await supabase.rpc("get_player_match_history", {
-    p_user_id: params.id,
-    p_limit: 50,
-  });
-
-  const isYou = user.id === params.id;
+  const isYou = userId === params.id;
 
   return (
     <div className="mx-auto max-w-2xl">
