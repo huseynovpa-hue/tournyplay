@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getUserId } from "@/lib/get-user-id";
 import { RoomCard } from "@/components/RoomCard";
 import type { Room } from "@/types/database";
 
@@ -15,18 +16,17 @@ const HISTORY_STATUSES = ["completed", "expired", "disputed"];
 export default async function MyRoomsPage() {
   const supabase = createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login?next=/my-rooms");
+  // Middleware already validated the session for this protected path and
+  // forwarded the user id via a header, so no extra getUser() round trip.
+  const userId = getUserId();
+  if (!userId) redirect("/login?next=/my-rooms");
 
   const { data: rooms } = await supabase
     .from("rooms")
     .select(
       "*, creator:profiles!rooms_creator_id_fkey(*), opponent:profiles!rooms_opponent_id_fkey(*), result:room_results(*)"
     )
-    .or(`creator_id.eq.${user.id},opponent_id.eq.${user.id}`)
+    .or(`creator_id.eq.${userId},opponent_id.eq.${userId}`)
     .order("created_at", { ascending: false })
     .returns<Room[]>();
 
@@ -75,7 +75,7 @@ export default async function MyRoomsPage() {
           </p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {inProgress.map((room) => (
-              <RoomCard key={room.id} room={room} currentUserId={user.id} />
+              <RoomCard key={room.id} room={room} currentUserId={userId} />
             ))}
           </div>
         </section>
@@ -100,7 +100,7 @@ export default async function MyRoomsPage() {
         ) : (
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {waitingForOpponent.map((room) => (
-              <RoomCard key={room.id} room={room} currentUserId={user.id} />
+              <RoomCard key={room.id} room={room} currentUserId={userId} />
             ))}
           </div>
         )}
@@ -118,7 +118,7 @@ export default async function MyRoomsPage() {
               <RoomCard
                 key={room.id}
                 room={room}
-                currentUserId={user.id}
+                currentUserId={userId}
                 showDate
               />
             ))}
