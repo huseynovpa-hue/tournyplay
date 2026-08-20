@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const SUPPORT_EMAIL = "support@tournyplay.app";
+const SUPPORT_EMAIL = "khannhuseyn@gmail.com";
 
 export default function ContactPage() {
   const [name, setName] = useState("");
