@@ -2,31 +2,50 @@
 
 import { useState } from "react";
 
-const SUPPORT_EMAIL = "khannhuseyn@gmail.com";
+const SUPPORT_EMAIL = "support@tournyplay.app";
+
+type Status = "idle" | "loading" | "success" | "error";
 
 export default function ContactPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [sent, setSent] = useState(false);
+  // Honeypot field, hidden from real users via CSS. Bots that fill in
+  // every input will trip it; the API silently no-ops when it's set.
+  const [company, setCompany] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  const [status, setStatus] = useState<Status>("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+    setStatus("loading");
 
-    const body = [
-      `Name: ${name}`,
-      `Email: ${email}`,
-      "",
-      message,
-    ].join("\n");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, subject, message, company }),
+      });
+      const data = await res.json().catch(() => ({}));
 
-    const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
-      subject || "TournyPlay support request"
-    )}&body=${encodeURIComponent(body)}`;
+      if (!res.ok) {
+        setError(data?.error || "Something went wrong. Please try again.");
+        setStatus("error");
+        return;
+      }
 
-    window.location.href = mailto;
-    setSent(true);
+      setStatus("success");
+      setName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setStatus("error");
+    }
   }
 
   return (
@@ -48,73 +67,93 @@ export default function ContactPage() {
         .
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-        <div>
-          <label className="mb-1.5 block text-sm font-semibold text-ink">
-            Name
-          </label>
-          <input
-            type="text"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-lg border border-base-border bg-base-raised px-3.5 py-2.5 text-ink outline-none focus:border-pitch"
-          />
+      {status === "success" ? (
+        <div className="mt-6 rounded-xl border border-pitch/40 bg-pitch/10 px-4 py-4 text-sm text-pitch">
+          Message sent — thanks for reaching out. We&apos;ll get back to you
+          at the email you provided.
         </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-ink">
+              Name
+            </label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-lg border border-base-border bg-base-raised px-3.5 py-2.5 text-ink outline-none focus:border-pitch"
+            />
+          </div>
 
-        <div>
-          <label className="mb-1.5 block text-sm font-semibold text-ink">
-            Email
-          </label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-base-border bg-base-raised px-3.5 py-2.5 text-ink outline-none focus:border-pitch"
-          />
-        </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-ink">
+              Email
+            </label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg border border-base-border bg-base-raised px-3.5 py-2.5 text-ink outline-none focus:border-pitch"
+            />
+          </div>
 
-        <div>
-          <label className="mb-1.5 block text-sm font-semibold text-ink">
-            Subject
-          </label>
-          <input
-            type="text"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            placeholder="e.g. Dispute on room #1234"
-            className="w-full rounded-lg border border-base-border bg-base-raised px-3.5 py-2.5 text-ink outline-none placeholder:text-ink-faint focus:border-pitch"
-          />
-        </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-ink">
+              Subject
+            </label>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="e.g. Dispute on room #1234"
+              className="w-full rounded-lg border border-base-border bg-base-raised px-3.5 py-2.5 text-ink outline-none placeholder:text-ink-faint focus:border-pitch"
+            />
+          </div>
 
-        <div>
-          <label className="mb-1.5 block text-sm font-semibold text-ink">
-            Message
-          </label>
-          <textarea
-            required
-            rows={5}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="w-full resize-none rounded-lg border border-base-border bg-base-raised px-3.5 py-2.5 text-ink outline-none focus:border-pitch"
-          />
-        </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-ink">
+              Message
+            </label>
+            <textarea
+              required
+              rows={5}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full resize-none rounded-lg border border-base-border bg-base-raised px-3.5 py-2.5 text-ink outline-none focus:border-pitch"
+            />
+          </div>
 
-        {sent && (
-          <p className="rounded-lg border border-pitch/40 bg-pitch/10 px-3.5 py-2.5 text-sm text-pitch">
-            Your email app should now be open with this message ready to
-            send. If nothing opened, email us directly at {SUPPORT_EMAIL}.
-          </p>
-        )}
+          {/* Honeypot — kept off-screen and out of the tab order, never shown to real users. */}
+          <div className="absolute -left-[9999px]" aria-hidden="true">
+            <label htmlFor="company">Company</label>
+            <input
+              id="company"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+            />
+          </div>
 
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-pitch py-2.5 font-display text-base font-bold text-base"
-        >
-          Send message
-        </button>
-      </form>
+          {error && (
+            <p className="rounded-lg border border-danger/40 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={status === "loading"}
+            className="w-full rounded-lg bg-pitch py-2.5 font-display text-base font-bold text-base disabled:opacity-60"
+          >
+            {status === "loading" ? "Sending..." : "Send message"}
+          </button>
+        </form>
+      )}
     </div>
   );
 }
