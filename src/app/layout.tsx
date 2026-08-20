@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Rajdhani, Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import { PitchBackground } from "@/components/PitchBackground";
 
 const display = Rajdhani({
@@ -28,12 +29,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
-      <body className="font-body min-h-screen bg-base text-ink antialiased">
+      <body className="font-body flex min-h-screen flex-col bg-base text-ink antialiased">
         <PitchBackground />
         <Navbar />
-        <main className="mx-auto max-w-5xl px-4 pb-16 pt-6 sm:px-6">
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 pt-6 sm:px-6">
           {children}
         </main>
+        <Footer />
       </body>
     </html>
   );
