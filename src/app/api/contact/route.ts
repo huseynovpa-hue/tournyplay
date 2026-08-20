@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sendPushToUser } from "@/lib/push-server";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -57,6 +58,22 @@ export async function POST(request: Request) {
       { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
+  }
+
+  // Best-effort: let the admin know a new message came in. Never fails
+  // the request if push isn't configured or the admin isn't subscribed.
+  const adminUserId = process.env.CONTACT_ADMIN_USER_ID;
+  if (adminUserId) {
+    try {
+      await sendPushToUser(adminUserId, {
+        title: "New contact message",
+        body: `${name}${subject ? ` — ${subject}` : ""}: ${message.slice(0, 120)}`,
+        url: "/",
+        tag: "contact-message",
+      });
+    } catch (err) {
+      console.error("Failed to send contact push notification:", err);
+    }
   }
 
   return NextResponse.json({ ok: true });
