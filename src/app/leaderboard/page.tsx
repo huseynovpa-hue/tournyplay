@@ -1,15 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
+import { getUserId } from "@/lib/get-user-id";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
 import type { PlayerStats } from "@/types/database";
 
-export const dynamic = "force-dynamic";
+// Leaderboard data doesn't need to be instant-fresh on every request —
+// revalidate it periodically instead of hitting the database on every
+// single page view.
+export const revalidate = 30;
 
 export default async function LeaderboardPage() {
   const supabase = createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Resolved once by middleware already; no extra getUser() round trip.
+  const userId = getUserId();
 
   const { data: leaderboard } = await supabase.rpc("get_leaderboard", {
     p_limit: 50,
@@ -26,7 +29,7 @@ export default async function LeaderboardPage() {
       <div className="mt-6">
         <LeaderboardTable
           players={(leaderboard as PlayerStats[]) ?? []}
-          currentUserId={user?.id}
+          currentUserId={userId ?? undefined}
         />
       </div>
     </div>
