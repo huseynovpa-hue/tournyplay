@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getUserId } from "@/lib/get-user-id";
 import { OpenRoomsList } from "@/components/OpenRoomsList";
 import type { Room } from "@/types/database";
 
@@ -8,9 +9,9 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const supabase = createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // User id already resolved by middleware — no need to call
+  // supabase.auth.getUser() again here, saving one round-trip.
+  const userId = getUserId();
 
   const { data: rooms } = await supabase
     .from("rooms")
@@ -38,7 +39,7 @@ export default async function HomePage() {
             Read the rules
           </Link>
           <Link
-            href={user ? "/rooms/create" : "/signup"}
+            href={userId ? "/rooms/create" : "/signup"}
             className="btn-3d btn-3d-pitch rounded-lg px-5 py-2.5 text-center font-display font-bold"
           >
             + Create a room
@@ -47,7 +48,7 @@ export default async function HomePage() {
       </div>
 
       <div className="mt-8">
-        <OpenRoomsList initialRooms={rooms ?? []} currentUserId={user?.id} />
+        <OpenRoomsList initialRooms={rooms ?? []} currentUserId={userId ?? undefined} />
       </div>
     </div>
   );
